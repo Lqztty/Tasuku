@@ -15,6 +15,9 @@ use Illuminate\Validation\Rule;
  * - tasks.move: 移動先（status, position）と、画面を表示したときのボードの版
  *
  * 担当者がメンバーかどうかは、業務ルールとして UseCase で確かめる。
+ *
+ * status / priority は Rule::enum ではなく、enum の値から作った Rule::in で検証する。
+ * Rule::enum のエラーメッセージは翻訳ファイルからしか取れず、messages() で日本語にできないため。
  */
 class TaskRequest extends FormRequest
 {
@@ -25,7 +28,7 @@ class TaskRequest extends FormRequest
     {
         if ($this->routeIs('tasks.move')) {
             return [
-                'status' => ['required', Rule::enum(TaskStatus::class)],
+                'status' => ['required', Rule::in(array_column(TaskStatus::cases(), 'value'))],
                 'position' => ['required', 'integer', 'min:0'],
                 'expected_version' => ['required', 'integer', 'min:0'],
             ];
@@ -34,8 +37,8 @@ class TaskRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
-            'status' => ['required', Rule::enum(TaskStatus::class)],
-            'priority' => ['required', Rule::enum(TaskPriority::class)],
+            'status' => ['required', Rule::in(array_column(TaskStatus::cases(), 'value'))],
+            'priority' => ['required', Rule::in(array_column(TaskPriority::cases(), 'value'))],
             'assignee_id' => ['nullable', 'integer'],
             'due_date' => ['nullable', 'date_format:Y-m-d'],
         ];
@@ -69,7 +72,7 @@ class TaskRequest extends FormRequest
             'max' => ':attributeは:max文字以内で入力してください。',
             'integer' => ':attributeは整数で指定してください。',
             'min' => ':attributeは:min以上で指定してください。',
-            'enum' => ':attributeの値が正しくありません。',
+            'in' => ':attributeの値が正しくありません。',
             'date_format' => ':attributeは YYYY-MM-DD の形式で入力してください。',
         ];
     }
