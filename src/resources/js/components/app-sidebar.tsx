@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, FolderGit2, FolderKanban, ListChecks } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,13 +14,19 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as projectsIndex } from '@/routes/projects';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'マイタスク',
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: ListChecks,
+    },
+    {
+        title: 'プロジェクト',
+        href: projectsIndex(),
+        icon: FolderKanban,
     },
 ];
 
