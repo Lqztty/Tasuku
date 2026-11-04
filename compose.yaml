@@ -1,0 +1,52 @@
+# Tasuku 開発環境
+#
+# ポートはホスト側の既存サービスとぶつからないよう、環境変数で変えられるようにしている。
+# パスワードはローカル開発専用のダミー値（本番では使わない）。
+name: tasuku
+
+x-app-base: &app-base
+  build:
+    context: ./docker/app
+  image: tasuku-app:dev
+  working_dir: /var/www/html
+  volumes:
+    - ./src:/var/www/html
+
+services:
+  app:
+    <<: *app-base
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "${APP_PORT:-8080}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  node:
+    <<: *app-base
+    command: npm run dev
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: tasuku
+      MYSQL_USER: tasuku
+      MYSQL_PASSWORD: "${DB_PASSWORD:-secret}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-root}"
+    ports:
+      - "${DB_FORWARD_PORT:-33060}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  db-data:

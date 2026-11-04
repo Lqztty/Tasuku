@@ -11,6 +11,9 @@
       "**/dist/**",
       "**/build/**",
       "**/public/build/**",
+      "**/resources/js/actions/**",
+      "**/resources/js/routes/**",
+      "**/resources/js/wayfinder/**",
       "**/*.d.ts"
     ],
     "grandfatherExisting": true,
@@ -20,7 +23,7 @@
   },
   "componentDuplication": {
     "jsRoot": "/src/resources/js",
-    "sharedDirs": ["Components", "features/common/components", "hooks", "utils"],
+    "sharedDirs": ["components", "hooks", "lib"],
     "reuseMarker": "@reuse-checked:",
     "reuseRequireReason": true,
     "reuseDocsRef": "CLAUDE.md「共通処理再利用ゲート」/.claude/rules/frontend/atomic-design.md"

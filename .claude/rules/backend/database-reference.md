@@ -39,4 +39,12 @@ Model を確認することで：
 
 | テーブル名 | 説明 | 主要カラム |
 | ---------- | ---- | ---------- |
-| `users` | ユーザー | `id`, `name`, `email` |
+| `users` | ユーザー（スターターキット標準。2要素認証・パスキーの列あり） | `id`, `name`, `email` |
+
+### かんばん（接頭辞 `kanban_`）
+
+| テーブル名 | 説明 | 主要カラム |
+| ---------- | ---- | ---------- |
+| `kanban_projects` | プロジェクト。ボードへの書き込みはこの行を `lockForUpdate` して直列化する | `id`, `name`, `description`, `board_version` |
+| `kanban_project_user` | プロジェクトのメンバー。オーナーは必ず1人 | `project_id`, `user_id`, `role`(`owner`/`member`)。`(project_id, user_id)` unique |
+| `kanban_tasks` | タスク。列（status）ごとに `position` が 0 からの連番 | `id`, `project_id`, `title`, `status`, `priority`, `assignee_id`, `due_date`, `position`, `created_by` |

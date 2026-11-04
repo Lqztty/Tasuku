@@ -25,25 +25,35 @@ paths:
 
 | カテゴリ | 技術 |
 |---------|------|
-| Backend | Laravel 12, PHP 8.2+ |
-| Frontend | React 18, TypeScript 5.0 |
-| 連携 | Inertia.js 2.0, Ziggy |
-| スタイル | Tailwind CSS 3 |
-| 状態管理 | Zustand (Immer) |
-| テスト | Pest, PHPUnit, PHPStan |
+| Backend | Laravel 13, PHP 8.5, Fortify（認証） |
+| Frontend | React 19（React Compiler 有効）, TypeScript 5.9 |
+| 連携 | Inertia.js 3, Wayfinder（ルートとアクションの型生成。Ziggy は使わない） |
+| スタイル | Tailwind CSS 4, shadcn/ui（Radix UI）, lucide-react |
+| ビルド・Lint・整形 | Vite+（`vp dev` / `vp build` / `vp check`。中身は oxlint と oxfmt） |
+| 状態管理 | Inertia のページ props が正。楽観的更新は Inertia 3 の `router.optimistic()`。画面内だけの状態は `useState` |
+| テスト | PHPUnit 12, Larastan（PHPStan level 7） |
+| DB | MySQL 8.4（Docker）。Feature テストは SQLite インメモリ |
 
 詳細: `src/package.json`, `src/composer.json`
+
+- Zustand は入れていない。複数ページにまたがるクライアント状態が本当に必要になったときだけ、相談してから入れる
+- Pest は入れていない（スターターキットの PHPUnit に合わせる）
 
 Docker実行・フォーマッター → `code-style.md`
 DDD 3層アーキテクチャ → `backend/laravel-conventions.md`
 
-### Frontend（Modular）
+### Frontend（スターターキットの構成に合わせる）
 
 ```
-Pages/        # Inertia.jsページ
-features/     # 機能モジュール
-stores/       # Zustand状態管理
-Components/   # 共有コンポーネント
+pages/        # Inertia.jsページ（ルートと1:1）
+layouts/      # レイアウト
+components/   # アプリ共通の部品
+components/ui # shadcn/ui の部品（手で直接編集しない）
+features/     # 機能ごとのモジュール
+hooks/        # 共通カスタムフック
+lib/          # ユーティリティ
+types/        # 共通の型
+actions/ routes/ wayfinder/   # Wayfinder の生成物（編集しない・git 管理外）
 ```
 
 **パスエイリアス**: `@/*` → `./resources/js/*`
@@ -58,10 +68,13 @@ Components/   # 共有コンポーネント
 - 破壊的コマンド (push --force, reset --hard)
 - フック無視 (--no-verify)
 - main/masterへのforce push
-- 明示的要求なしのコミット
+- main への直接コミット（初期コミットを除く）
 
 ✅ 必須:
 - ファイル名指定でのステージング
+- 小さな変更や追加でも、区切りごとにコミットしてプッシュし、コミット内容をユーザーに報告する（ユーザー指示 2026-11-04）
+- 作業は feature ブランチで行い、区切りで PR を作る（リモート: https://github.com/Lqztty/Tasuku）
+- 公開リポジトリなので `.env` や認証情報は絶対にコミットしない
 ```
 
 ## ワークフロー

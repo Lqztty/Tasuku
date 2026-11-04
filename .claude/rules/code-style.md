@@ -11,33 +11,38 @@ paths:
 
 # コードスタイル規約
 
-手動でフォーマットせず、必ず以下のツールを使用すること。
+手動でフォーマットせず、必ず以下のツールを使用すること。コマンドはすべて Docker 内で実行する。
 
 ## フォーマッター & Linter 実行コマンド
 
-| 言語       | ツール       | Docker実行コマンド                                 |
-| ---------- | ------------ | -------------------------------------------------- |
-| PHP        | Laravel Pint | `docker compose exec app ./vendor/bin/pint`        |
-| PHP        | Larastan（静的解析） | `docker compose exec app composer analyse` |
-| TypeScript | Prettier     | `docker compose exec node npm run format`          |
-| TypeScript | ESLint       | `docker compose exec node npm run lint`            |
-| TypeScript | ESLint修正   | `docker compose exec node npm run lint:fix`        |
+| 言語 | 目的 | Docker実行コマンド |
+| ---- | ---- | ------------------ |
+| PHP | 整形（Pint） | `docker compose exec app composer lint` |
+| PHP | 整形の確認だけ | `docker compose exec app composer lint:check` |
+| PHP | 静的解析（Larastan / PHPStan level 7） | `docker compose exec app composer types:check` |
+| PHP | テスト（PHPUnit 12） | `docker compose exec app php artisan test` |
+| PHP | MySQL 結合テスト | `docker compose exec app php artisan test --configuration=phpunit.integration.xml` |
+| TypeScript | Lint + 整形の確認（Vite+ = oxlint + oxfmt） | `docker compose exec node npm run check` |
+| TypeScript | Lint + 整形の自動修正 | `docker compose exec node npm run check:fix` |
+| TypeScript | 型チェック | `docker compose exec node npm run types:check` |
+| TypeScript | ビルド | `docker compose exec node npm run build` |
 
 > **Larastan（PHPStan）について**: `use` 漏れによる「Class not found」や未定義メソッド呼び出しなど、
-> 実行するまで気づけない致命的バグを静的に検出する。既存の指摘は `src/phpstan-baseline.neon` に
-> 退避済みで、**新規コードのみ** level 5 で検査される。PHPファイルを変更したら
-> `docker compose exec app composer analyse` を実行し、0 errors を確認してからコミットすること。
+> 実行するまで気づけない致命的バグを静的に検出する。PHPファイルを変更したら
+> `composer types:check` を実行し、0 errors を確認してからコミットすること。
 > （AI編集時は `.claude/hooks/php-unresolved-class-check.mjs` が編集直後に import 漏れを即警告する。）
+
+ESLint と Prettier は使っていない。Lint と整形の設定は `vite.config.ts` の `lint` / `fmt` にある。
 
 ### 設定ファイル
 
-| ツール       | 設定ファイル                  |
-| ------------ | ----------------------------- |
-| Laravel Pint | `src/pint.json`               |
-| Larastan     | `src/phpstan.neon` / `src/phpstan-baseline.neon` |
-| Prettier     | `src/.prettierrc`             |
-| Prettier     | `src/.prettierignore`         |
-| ESLint       | `src/eslint.config.js`        |
+| ツール | 設定ファイル |
+| ------ | ------------ |
+| Laravel Pint | `src/pint.json` |
+| Larastan | `src/phpstan.neon` |
+| Vite+（lint / fmt） | `src/vite.config.ts` |
+| TypeScript | `src/tsconfig.json` |
+| PHPUnit | `src/phpunit.xml`（SQLite インメモリ）、`src/phpunit.integration.xml`（MySQL） |
 
 ## 命名規則
 
@@ -48,18 +53,17 @@ paths:
 
 ### クイックリファレンス
 
-| 対象               | PHP（Laravel）     | TypeScript（React）    |
-| ------------------ | ------------------ | ---------------------- |
-| 変数               | `snake_case`       | `lowerCamelCase`       |
-| メソッド/関数      | `camelCase`        | `lowerCamelCase`       |
-| クラス/型/IF       | `PascalCase`       | `PascalCase`           |
-| 定数               | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE`     |
-| コンポーネント     | -                  | `PascalCase`           |
-| カスタムフック     | -                  | `use` + `PascalCase`   |
-| ファイル名（コンポ） | -                  | `PascalCase.tsx`       |
-| ファイル名（その他） | -                  | `kebab-case.ts`        |
-| DBテーブル         | `snake_case`（複数形） | -                      |
-| DBカラム           | `snake_case`       | -                      |
+| 対象 | PHP（Laravel） | TypeScript（React） |
+| ---- | -------------- | ------------------- |
+| 変数 | `snake_case` | `lowerCamelCase` |
+| メソッド/関数 | `camelCase` | `lowerCamelCase` |
+| クラス/型/IF | `PascalCase` | `PascalCase` |
+| 定数 | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE` |
+| コンポーネント | - | `PascalCase` |
+| カスタムフック | - | `use` + `PascalCase` |
+| ファイル名 | `PascalCase.php` | `kebab-case.tsx` / `kebab-case.ts`（スターターキットに合わせる） |
+| DBテーブル | `snake_case`（複数形） | - |
+| DBカラム | `snake_case` | - |
 
 ## コメント規約
 
@@ -73,9 +77,9 @@ paths:
  *
  * 新しいプロジェクトを作成し、リポジトリに保存する
  *
- * @param CreateProjectRequest $request プロジェクト作成リクエスト
+ * @param CreateProjectCommand $command プロジェクト作成の入力
  * @return Project 作成されたプロジェクト
- * @throws ValidationException バリデーションエラーの場合
+ * @throws ForbiddenException 権限がない場合
  */
 ```
 
@@ -87,8 +91,8 @@ paths:
 /**
  * 複数行コメント: 詳細な説明
  *
- * プロジェクト一覧を取得して状態を更新する
- * @param filters - フィルター条件（オプション）
+ * タスクを別の列へ移動したあとの並びを計算する
+ * @param tasks - 現在のタスク一覧
  */
 ```
 
@@ -99,30 +103,28 @@ paths:
 - 複雑なロジックには必ずコメントを追加
 - TODOコメントには担当者と期日を記載
   ```typescript
-  // TODO: [担当者名] 2026-02-01 までにキャッシュ機構を追加
+  // TODO: [担当者名] 2026-12-01 までにキャッシュ機構を追加
   ```
 
 ## インポート順序
 
 ### TypeScript
 
+並び順は Vite+（oxfmt）に任せる。手で並べ替えない。目安は次のとおり。
+
 ```typescript
-// 1. React関連
-import { useState, useEffect } from 'react';
-
-// 2. 外部ライブラリ
+// 1. 外部ライブラリ（React、@inertiajs/react など）
 import { router } from '@inertiajs/react';
-import { create } from 'zustand';
+import { useState } from 'react';
 
-// 3. 内部モジュール（絶対パス @/）
-import { useProjectStore } from '@/stores';
-import { ProjectCard } from '@/Components/ProjectCard';
+// 2. 内部モジュール（絶対パス @/）
+import { Button } from '@/components/ui/button';
 
-// 4. 型定義
-import type { Project } from '@/types';
+// 3. 型定義
+import type { Task } from '@/types/models';
 
-// 5. 相対パス
-import { helper } from './helper';
+// 4. 相対パス
+import { moveLocally } from './lib/move-locally';
 ```
 
 ### PHP
@@ -141,38 +143,20 @@ use App\Domain\Project\ProjectRepositoryInterface;
 use App\Domain\Project\Entities\Project;
 
 // 4. 現在の層
-use App\Application\Project\Dto\CreateProjectRequest;
+use App\Application\Project\Commands\CreateProjectCommand;
 ```
 
 ## コミット前チェック（必須）
 
-コミット前には必ず以下を実行すること：
-
 ```bash
-# PHP（Laravel Pint）
-docker compose exec app ./vendor/bin/pint
-
-# PHP（Larastan 静的解析 / Class not found・未定義メソッド等の検出）
-docker compose exec app composer analyse
-
-# TypeScript（Prettier + ESLint）
-docker compose exec node npm run format
-docker compose exec node npm run lint
-
-# TypeScriptビルドチェック
-docker compose exec node npm run build
+docker compose exec app composer lint
+docker compose exec app composer types:check
+docker compose exec app php artisan test
+docker compose exec node npm run check
+docker compose exec node npm run types:check
 ```
 
-## VSCode 推奨設定
-
-保存時に自動フォーマットを有効化：
-
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-}
-```
+`npm run build` はブラウザでの動作確認が済んでから実行する（`work-rules.md`）。
 
 ## 注意事項
 
