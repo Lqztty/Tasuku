@@ -53,6 +53,9 @@ src/resources/js/components/  共通部品（ui/ は shadcn）
 - 小さな変更でも、区切りごとにコミットしてプッシュし、コミット内容を報告する
 - 作業は feature ブランチで行い、区切りで PR を作る。main に直接コミットしない
 - `.env` や認証情報はコミットしない（公開リポジトリ）
+- コミットの作者は `Lqztty <bxckwww@gmail.com>`（`git config --local` で設定済み）
+- コミットメッセージに `Co-Authored-By: Claude ...`、PR 本文に「Generated with Claude Code」を付けない（GitHub の Contributors に Lqztty だけを表示するため）
+- PR を出している最中に `main` を force push すると、GitHub がその PR を自動で閉じ、再オープンもできなくなる。履歴の書き換えは避ける
 
 ## ファイルサイズ規約
 
