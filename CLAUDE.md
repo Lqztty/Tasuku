@@ -93,10 +93,9 @@ src/resources/js/components/  共通部品（ui/ は shadcn）
 
 色は `app.css` のトークン（`bg-card`、`text-muted-foreground`、`border-border` など）で指定する。生の無彩色（`gray-*`、`white`、`black`）を使うときは `dark:` を必ず併記する（`dark-mode-guard` hook が検査する）。
 
-## サブエージェントと Codex
+## サブエージェント
 
 - 基本はメインが自分で調べて書く。係に渡すのは、広い検索、互いに依存しない並行作業、別の目のレビューだけ（`work-rules.md`）
-- 迷う設計判断、DB 変更、セキュリティやデータ整合性に関わる変更では、Codex に批判的なレビューを頼んでよい（`.claude/skills/codex-collab`）
 
 ## 自己修復
 

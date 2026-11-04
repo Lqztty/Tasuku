@@ -30,7 +30,7 @@ devarchitect-ai の設計ルールと hook を、同じ Laravel + React 構成�
 
 | 場所 | 内容 |
 | ---- | ---- |
-| `CLAUDE.md` | ファイルサイズ規約、共通処理再利用ゲート、ダーク/ライト対応、スキル起動、サブエージェント、Codex、自己修復 |
+| `CLAUDE.md` | ファイルサイズ規約、共通処理再利用ゲート、ダーク/ライト対応、スキル起動、サブエージェント、自己修復 |
 | `.claude/rules/general/` | AI行動制約、実装前・中・後の流れ |
 | `.claude/rules/work-rules.md` | 作業ルール、小規模変更の定義（定義はここ1か所） |
 | `.claude/rules/backend/` | DDD 3層、PHP・DB命名、DB構造の確認方法 |
@@ -41,7 +41,6 @@ devarchitect-ai の設計ルールと hook を、同じ Laravel + React 構成�
 | `.claude/harness.config.json` | hook の設定（プロジェクトごとの差分はここだけ） |
 | `.claude/settings.json` | hook の配線と Docker コマンドの許可 |
 | `.claude/memories/learnings.md` | 同じ構成なら通用する教訓（以後はそのプロジェクトの教訓を追記） |
-| `.claude/skills/codex-collab/` | Codex へのセカンドオピニオン依頼手順 |
 
 ## hook が検査すること
 
@@ -65,5 +64,4 @@ devarchitect-ai の設計ルールと hook を、同じ Laravel + React 構成�
 
 ルール内の次の記述は、該当ツールを入れていない環境では読み飛ばしてよい。
 
-- Codex セカンドオピニオン（Codex CLI が必要）
 - `/tdd`、`/test-coverage`、`/session-carryover`、MCP Serena
