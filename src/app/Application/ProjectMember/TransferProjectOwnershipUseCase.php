@@ -16,6 +16,7 @@ use App\Domain\Shared\TransactionManagerInterface;
  * 2つのロールの書き換えを同じトランザクションで行い、「オーナーは1プロジェクトに必ず1人」を保つ。
  * プロジェクト行を先にロックするので、同時に引き継ごうとしても2回目は
  * 自分がすでにメンバーになっていて権限エラーになる。
+ * 相手の退会との競合は DeleteUserUseCase の説明を参照。
  * タスクの並びや担当者は変わらないので、ボードの版は進めない。
  */
 final class TransferProjectOwnershipUseCase
@@ -32,7 +33,9 @@ final class TransferProjectOwnershipUseCase
             $project = $this->projects->lockForUpdate($projectId);
             ProjectPermission::ensureCanManageProject($this->members->findRole($project->id, $userId));
 
-            $targetRole = $this->members->findRole($project->id, $newOwnerId)
+            // 相手のメンバー行もロックする。相手が同時に退会しようとしていたら退会が終わるまで待ち、
+            // 退会していれば見つからない扱いにする（退会した人をオーナーにしない）
+            $targetRole = $this->members->findRoleForUpdate($project->id, $newOwnerId)
                 ?? throw new NotFoundException('メンバーが見つかりません。');
 
             if ($targetRole === ProjectRole::Owner) {

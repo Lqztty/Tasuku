@@ -19,6 +19,17 @@ final class EloquentProjectMemberRepository implements ProjectMemberRepositoryIn
         return $role === null ? null : ProjectRole::from((string) $role);
     }
 
+    public function findRoleForUpdate(int $projectId, int $userId): ?ProjectRole
+    {
+        $role = KanbanProjectMember::query()
+            ->where('project_id', $projectId)
+            ->where('user_id', $userId)
+            ->lockForUpdate()
+            ->value('role');
+
+        return $role === null ? null : ProjectRole::from((string) $role);
+    }
+
     public function listByProject(int $projectId): array
     {
         return array_values(KanbanProjectMember::query()
@@ -64,11 +75,13 @@ final class EloquentProjectMemberRepository implements ProjectMemberRepositoryIn
             ->update(['role' => $role->value]);
     }
 
-    public function isOwnerOfAnyProject(int $userId): bool
+    public function findRolesByUserForUpdate(int $userId): array
     {
-        return KanbanProjectMember::query()
+        return array_values(KanbanProjectMember::query()
             ->where('user_id', $userId)
-            ->where('role', ProjectRole::Owner->value)
-            ->exists();
+            ->lockForUpdate()
+            ->pluck('role')
+            ->map(fn (mixed $role): ProjectRole => ProjectRole::from((string) $role))
+            ->all());
     }
 }

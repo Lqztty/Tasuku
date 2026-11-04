@@ -16,4 +16,10 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
         return $id === null ? null : (int) $id;
     }
+
+    public function delete(int $userId): void
+    {
+        // スターターキットの退会処理と同じく、モデルの delete() を通す（モデルイベントを飛ばさない）
+        User::query()->find($userId)?->delete();
+    }
 }
