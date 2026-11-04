@@ -58,11 +58,13 @@ export function KanbanColumn({
         (dropPreview.beforeTaskId === null ||
             !tasks.some((task) => task.id === dropPreview.beforeTaskId));
 
+    // 置き先の列を囲む枠は内側に描く（ring-inset）。外側に描くと、横スクロールの親
+    // （overflow-x-auto）に上端が切り取られて見切れるため
     return (
         <section
             aria-label={TASK_STATUS_LABELS[status]}
             className={cn(
-                'flex w-72 shrink-0 flex-col rounded-xl bg-muted/50 ring-2 ring-transparent transition-shadow duration-150 md:w-auto md:min-w-0 md:flex-1',
+                'flex w-72 shrink-0 flex-col rounded-xl bg-muted/50 ring-2 ring-transparent transition-shadow duration-150 ring-inset md:w-auto md:min-w-0 md:flex-1',
                 dropPreview && 'ring-primary/40',
             )}
         >
