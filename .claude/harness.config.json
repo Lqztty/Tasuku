@@ -1,0 +1,28 @@
+{
+  "$comment": "ハーネス設定。プロジェクトごとの差分はこのファイルだけで吸収し、.claude/hooks/*.mjs は改変しない。値の意味は .claude/hooks/README.md 参照。",
+  "fileSizeGuard": {
+    "hardLimit": 800,
+    "softLimit": 600,
+    "roots": ["/src/app/", "/src/resources/js/"],
+    "extensions": [".php", ".ts", ".tsx", ".js", ".jsx"],
+    "ignoreGlobs": [
+      "**/vendor/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/public/build/**",
+      "**/*.d.ts"
+    ],
+    "grandfatherExisting": true,
+    "baselineFile": ".claude/harness-baseline.json",
+    "sizeExemptMarker": "@size-exempt:",
+    "splitHints": "view→カード/セクション単位のコンポーネント抽出、store→slice分割、Controller→UseCase抽出、hooks/utils切り出し。"
+  },
+  "componentDuplication": {
+    "jsRoot": "/src/resources/js",
+    "sharedDirs": ["Components", "features/common/components", "hooks", "utils"],
+    "reuseMarker": "@reuse-checked:",
+    "reuseRequireReason": true,
+    "reuseDocsRef": "CLAUDE.md「共通処理再利用ゲート」/.claude/rules/frontend/atomic-design.md"
+  }
+}

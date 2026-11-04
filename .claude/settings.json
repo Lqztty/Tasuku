@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(docker compose exec node npm:*)",
+      "Bash(docker compose exec app php artisan:*)",
+      "Bash(git:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/component-duplication-check.mjs\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/file-size-guard.mjs\"",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/dark-mode-guard.mjs\"",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/php-unresolved-class-check.mjs\"",
+            "timeout": 8000
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/native-select-guard.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}
