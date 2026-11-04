@@ -26,7 +26,7 @@
 docker compose up -d                       # app: http://localhost:8080 / vite: 5173 / MySQL: 33060
 docker compose exec app php artisan migrate:fresh --seed
 docker compose exec app php artisan test                                          # Unit + Feature（SQLite）
-docker compose exec app php artisan test --configuration=phpunit.integration.xml  # MySQL 結合テスト
+docker compose exec app php artisan test -c phpunit.integration.xml  # MySQL 結合テスト
 docker compose exec app composer lint          # Pint
 docker compose exec app composer types:check   # Larastan
 docker compose exec node npm run check         # Vite+（oxlint + oxfmt）

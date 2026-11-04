@@ -21,7 +21,7 @@ paths:
 | PHP | 整形の確認だけ | `docker compose exec app composer lint:check` |
 | PHP | 静的解析（Larastan / PHPStan level 7） | `docker compose exec app composer types:check` |
 | PHP | テスト（PHPUnit 12） | `docker compose exec app php artisan test` |
-| PHP | MySQL 結合テスト | `docker compose exec app php artisan test --configuration=phpunit.integration.xml` |
+| PHP | MySQL 結合テスト | `docker compose exec app php artisan test -c phpunit.integration.xml` |
 | TypeScript | Lint + 整形の確認（Vite+ = oxlint + oxfmt） | `docker compose exec node npm run check` |
 | TypeScript | Lint + 整形の自動修正 | `docker compose exec node npm run check:fix` |
 | TypeScript | 型チェック | `docker compose exec node npm run types:check` |
