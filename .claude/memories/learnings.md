@@ -29,6 +29,15 @@
 |------|------|------|
 | ブラウザから 5173 番に繋がらない。ログに「Network: use --host to expose」 | rebase などで作業ツリーが一時的に古いコミットになり、Docker 用の `server.host` が無い `vite.config.ts` で Vite が再起動した | `docker compose restart node` |
 
+### 画面の読み込みが極端に遅い（Windows + Docker）
+
+| 症状 | 原因 | 対処 |
+|------|------|------|
+| 1 画面の表示に 15〜20 秒。`php artisan --version` だけで 17 秒 | Windows のフォルダをバインドマウントすると、vendor の約 1 万ファイルを読むのが遅い（Linux の領域なら 0.3 秒） | vendor / node_modules を名前付きボリュームへ。CLI の OPcache を有効に |
+| node コンテナが CPU を使い続ける | Vite のポーリング監視（既定 0.1 秒ごと） | `watch.interval: 1000` と、監視不要なフォルダの `ignored` |
+
+まず「どこで時間がかかっているか」を測る（curl の `time_starttransfer`、コンテナ内での起動時間、Linux の領域にコピーしての比較）。
+
 ### shadcn CLI で部品を足すとき（2026-11 時点）
 
 - `src/pnpm-workspace.yaml` があると CLI が pnpm を使おうとして失敗する。実行中だけ退避する:
