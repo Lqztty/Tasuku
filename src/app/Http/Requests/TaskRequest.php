@@ -62,18 +62,14 @@ class TaskRequest extends FormRequest
     }
 
     /**
+     * 日付は :format（Y-m-d）より YYYY-MM-DD の方が伝わりやすいので、ここだけ個別に書く
+     *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'required' => ':attributeを入力してください。',
-            'string' => ':attributeは文字で入力してください。',
-            'max' => ':attributeは:max文字以内で入力してください。',
-            'integer' => ':attributeは整数で指定してください。',
-            'min' => ':attributeは:min以上で指定してください。',
-            'in' => ':attributeの値が正しくありません。',
-            'date_format' => ':attributeは YYYY-MM-DD の形式で入力してください。',
+            'due_date.date_format' => ':attributeは YYYY-MM-DD の形式で入力してください。',
         ];
     }
 }

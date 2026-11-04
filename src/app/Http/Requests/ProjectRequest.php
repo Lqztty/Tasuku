@@ -33,16 +33,4 @@ class ProjectRequest extends FormRequest
             'description' => '説明',
         ];
     }
-
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'required' => ':attributeを入力してください。',
-            'string' => ':attributeは文字で入力してください。',
-            'max' => ':attributeは:max文字以内で入力してください。',
-        ];
-    }
 }
