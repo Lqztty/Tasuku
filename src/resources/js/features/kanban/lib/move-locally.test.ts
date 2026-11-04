@@ -77,8 +77,10 @@ describe('moveLocally', () => {
         const positions = (status: TaskStatus) =>
             result.filter((t) => t.status === status).map((t) => t.position);
 
-        expect(positions('todo').sort()).toEqual([0, 1]);
-        expect(positions('in_progress').sort()).toEqual([0, 1, 2]);
+        expect(positions('todo').sort((a, b) => a - b)).toEqual([0, 1]);
+        expect(positions('in_progress').sort((a, b) => a - b)).toEqual([
+            0, 1, 2,
+        ]);
     });
 
     it('元の配列とタスクは変えない', () => {
