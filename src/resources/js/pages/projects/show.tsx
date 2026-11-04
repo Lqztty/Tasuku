@@ -59,6 +59,7 @@ export default function ProjectShow({
         null,
     );
     const [dialogKey, setDialogKey] = useState(0);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isMoving, setIsMoving] = useState(false);
 
     const membersById = new Map(
@@ -69,6 +70,7 @@ export default function ProjectShow({
     const openDialog = (target: TaskDialogTarget) => {
         setDialogKey((key) => key + 1); // 開くたびに入力を初期化する
         setDialogTarget(target);
+        setIsDialogOpen(true);
     };
 
     const canDelete = (task: Task) =>
@@ -187,10 +189,11 @@ export default function ProjectShow({
             <TaskFormDialog
                 key={dialogKey}
                 target={dialogTarget}
+                isOpen={isDialogOpen}
                 projectId={project.id}
                 members={members}
                 canDelete={canDelete}
-                onClose={() => setDialogTarget(null)}
+                onClose={() => setIsDialogOpen(false)}
             />
         </>
     );

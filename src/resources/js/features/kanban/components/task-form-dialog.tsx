@@ -35,7 +35,12 @@ export type TaskDialogTarget =
     | { kind: 'edit'; task: Task };
 
 type TaskFormDialogProps = {
+    /**
+     * 何を表示するか。閉じた後も前回の値を持ち続ける（閉じるアニメーションの間に
+     * 中身が「新しいタスク」に切り替わって見えないようにするため）。開いているかは isOpen で渡す
+     */
     target: TaskDialogTarget | null;
+    isOpen: boolean;
     projectId: number;
     members: Member[];
     canDelete: (task: Task) => boolean;
@@ -58,6 +63,7 @@ type TaskFormData = {
  */
 export function TaskFormDialog({
     target,
+    isOpen,
     projectId,
     members,
     canDelete,
@@ -121,10 +127,7 @@ export function TaskFormDialog({
     };
 
     return (
-        <Dialog
-            open={target !== null}
-            onOpenChange={(open) => !open && onClose()}
-        >
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent>
                 <DialogTitle>
                     {task ? 'タスクを編集' : '新しいタスク'}
