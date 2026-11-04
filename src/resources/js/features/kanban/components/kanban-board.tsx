@@ -2,18 +2,37 @@ import {
     DndContext,
     DragOverlay,
     KeyboardSensor,
+    MeasuringStrategy,
     PointerSensor,
     closestCorners,
+    pointerWithin,
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import type {
+    CollisionDetection,
+    DragEndEvent,
+    DragOverEvent,
+    DragStartEvent,
+} from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useRef, useState } from 'react';
 import type { Member, Task, TaskStatus } from '@/types/models';
 import { TASK_STATUSES } from '../lib/constants';
+import {
+    SCREEN_READER_INSTRUCTIONS,
+    createAnnouncements,
+} from '../lib/drag-announcements';
+import {
+    isBelowCenter,
+    isSamePlace,
+    resolveDrop,
+    taskAfterDrop,
+} from '../lib/drop-target';
+import type { DropTarget } from '../lib/drop-target';
 import { groupByStatus } from '../lib/move-locally';
 import { KanbanColumn } from './kanban-column';
+import type { DropPreview } from './kanban-column';
 import { TaskCardBody } from './task-card';
 
 type KanbanBoardProps = {
@@ -29,40 +48,32 @@ type KanbanBoardProps = {
     onEdit: (task: Task) => void;
 };
 
+/** 高さが取れなかったときの点線の枠の高さ（カード1枚ぶんの目安） */
+const FALLBACK_CARD_HEIGHT = 72;
+
 /**
- * ドロップ先から「どの列の何番目へ移すか」を求める。
- *
- * 位置は絞り込み後ではなく、全タスクの並びでの位置にする（サーバーの position と一致させるため）。
- * - タスクの上に落としたら、そのタスクの位置（同じ列なら入れ替わり、別の列ならその前に入る）
- * - 列の空いている所に落としたら、その列の末尾
+ * 重なりの判定。マウスの下にカードがあればそのカード、無ければ列（空いている所）。
+ * キーボード操作ではマウスの位置が無いので、近い角で判定する。
  */
-function resolveDrop(
-    tasks: Task[],
-    active: Task,
-    over: NonNullable<DragEndEvent['over']>,
-): { status: TaskStatus; index: number } | null {
-    const columns = groupByStatus(tasks);
-    const overTask = tasks.find((task) => task.id === over.id);
+const collisionDetection: CollisionDetection = (args) => {
+    const within = pointerWithin(args);
+    const card = within.find((collision) => typeof collision.id === 'number');
 
-    if (overTask) {
-        return {
-            status: overTask.status,
-            index: columns[overTask.status].findIndex(
-                (t) => t.id === overTask.id,
-            ),
-        };
+    if (card) {
+        return [card];
     }
 
-    const status = over.data.current?.status as TaskStatus | undefined;
+    return within.length > 0 ? within : closestCorners(args);
+};
 
-    if (!status) {
-        return null;
-    }
-
-    const length = columns[status].length;
-
-    return { status, index: status === active.status ? length - 1 : length };
-}
+/**
+ * 当たり判定には、ドラッグを始めた時点の位置を使う。
+ * 点線の枠を差し込むとカードがずれるが、それで置き先が変わって枠が動き、
+ * またずれる……というちらつきが起きないようにするため。
+ */
+const MEASURING = {
+    droppable: { strategy: MeasuringStrategy.BeforeDragging },
+};
 
 export function KanbanBoard({
     tasks,
@@ -74,6 +85,8 @@ export function KanbanBoard({
     onEdit,
 }: KanbanBoardProps) {
     const [activeId, setActiveId] = useState<number | null>(null);
+    const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+    const [activeHeight, setActiveHeight] = useState(FALLBACK_CARD_HEIGHT);
     // ドラッグを離した瞬間にブラウザが click も発生させるため、直後のクリックは編集として扱わない
     const lastDragEndAtRef = useRef(0);
 
@@ -94,6 +107,22 @@ export function KanbanBoard({
     const visibleColumns = groupByStatus(visibleTasks);
     const activeTask = tasks.find((task) => task.id === activeId);
 
+    // 置き先の列にだけ、点線の枠を出す位置を渡す（今の場所と同じなら出さない）
+    const preview: (DropPreview & { status: TaskStatus }) | null =
+        activeTask && dropTarget && !isSamePlace(activeTask, dropTarget)
+            ? {
+                  status: dropTarget.status,
+                  beforeTaskId: taskAfterDrop(tasks, activeTask, dropTarget),
+                  height: activeHeight,
+              }
+            : null;
+
+    const finishDrag = () => {
+        setActiveId(null);
+        setDropTarget(null);
+        lastDragEndAtRef.current = Date.now();
+    };
+
     const handleEdit = (task: Task) => {
         if (Date.now() - lastDragEndAtRef.current < 250) {
             return;
@@ -104,11 +133,28 @@ export function KanbanBoard({
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(Number(event.active.id));
+        setActiveHeight(
+            event.active.rect.current.initial?.height ?? FALLBACK_CARD_HEIGHT,
+        );
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const active = tasks.find((task) => task.id === event.active.id);
+
+        setDropTarget(
+            active && event.over
+                ? resolveDrop(
+                      tasks,
+                      active,
+                      event.over,
+                      isBelowCenter(event.active, event.over),
+                  )
+                : null,
+        );
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        setActiveId(null);
-        lastDragEndAtRef.current = Date.now();
+        finishDrag();
 
         const active = tasks.find((task) => task.id === event.active.id);
 
@@ -116,13 +162,14 @@ export function KanbanBoard({
             return;
         }
 
-        const target = resolveDrop(tasks, active, event.over);
+        const target = resolveDrop(
+            tasks,
+            active,
+            event.over,
+            isBelowCenter(event.active, event.over),
+        );
 
-        if (
-            !target ||
-            (target.status === active.status &&
-                target.index === active.position)
-        ) {
+        if (!target || isSamePlace(active, target)) {
             return;
         }
 
@@ -132,13 +179,16 @@ export function KanbanBoard({
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={() => {
-                setActiveId(null);
-                lastDragEndAtRef.current = Date.now();
+            collisionDetection={collisionDetection}
+            measuring={MEASURING}
+            accessibility={{
+                announcements: createAnnouncements(tasks),
+                screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
             }}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={finishDrag}
         >
             <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
                 {TASK_STATUSES.map((status) => (
@@ -148,6 +198,9 @@ export function KanbanBoard({
                         tasks={visibleColumns[status]}
                         membersById={membersById}
                         isDragDisabled={isMoving}
+                        dropPreview={
+                            preview?.status === status ? preview : null
+                        }
                         onCreate={onCreate}
                         onEdit={handleEdit}
                     />

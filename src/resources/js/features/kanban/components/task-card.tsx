@@ -1,5 +1,4 @@
 import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import type { Member, Task } from '@/types/models';
@@ -18,6 +17,9 @@ type TaskCardProps = {
  *
  * - マウス: クリックで編集、少し動かすとドラッグ（PointerSensor の distance）
  * - キーボード: Enter で編集、Space で持ち上げて矢印キーで移動し、Space で置く
+ *
+ * ドラッグ中もカード自体は動かさない（transform を使わない）。置き先は点線の枠
+ * （DropPlaceholder）だけで示し、元の場所のカードは薄く残して「どこから」を示す。
  */
 export function TaskCard({
     task,
@@ -25,14 +27,7 @@ export function TaskCard({
     onEdit,
     isDragDisabled = false,
 }: TaskCardProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
         id: task.id,
         data: { status: task.status },
         disabled: isDragDisabled,
@@ -52,7 +47,6 @@ export function TaskCard({
     return (
         <div
             ref={setNodeRef}
-            style={{ transform: CSS.Translate.toString(transform), transition }}
             {...attributes}
             {...listeners}
             onKeyDown={handleKeyDown}
@@ -60,7 +54,7 @@ export function TaskCard({
             aria-label={`${task.title}（Enter で編集、Space で移動）`}
             className={cn(
                 'cursor-grab touch-none rounded-lg border bg-card p-3 text-left shadow-xs transition-colors duration-150 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                isDragging && 'opacity-40',
+                isDragging && 'border-dashed opacity-40',
                 isDragDisabled && 'cursor-progress',
             )}
         >
