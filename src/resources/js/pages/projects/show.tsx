@@ -16,6 +16,7 @@ import { moveLocally } from '@/features/kanban/lib/move-locally';
 import { MemberManageDialog } from '@/features/project/components/member-manage-dialog';
 import { ProjectDeleteDialog } from '@/features/project/components/project-delete-dialog';
 import { ProjectFormDialog } from '@/features/project/components/project-form-dialog';
+import { ProjectLeaveDialog } from '@/features/project/components/project-leave-dialog';
 import { visitErrorToast } from '@/lib/visit-error-toast';
 import {
     index as projectsIndex,
@@ -144,6 +145,9 @@ export default function ProjectShow({
                                 />
                                 <ProjectDeleteDialog project={project} />
                             </>
+                        )}
+                        {permissions.leave_project && (
+                            <ProjectLeaveDialog project={project} />
                         )}
                     </div>
                 </div>
