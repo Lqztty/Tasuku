@@ -32,12 +32,12 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'リポジトリ',
         href: 'https://github.com/laravel/react-starter-kit',
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
+        title: 'ドキュメント',
         href: 'https://laravel.com/docs/starter-kits#react',
         icon: BookOpen,
     },
