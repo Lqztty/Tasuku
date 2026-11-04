@@ -5,7 +5,8 @@ namespace App\Domain\Project\ValueObjects;
 /**
  * プロジェクト内でのロール。
  *
- * オーナーは1プロジェクトに必ず1人。移譲する機能はない。
+ * オーナーは1プロジェクトに必ず1人。移譲は TransferProjectOwnershipUseCase で、
+ * 元のオーナーをメンバーにする処理と同じトランザクションで行う。
  */
 enum ProjectRole: string
 {

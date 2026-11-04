@@ -13,6 +13,12 @@ interface ProjectMemberRepositoryInterface
     public function findRole(int $projectId, int $userId): ?ProjectRole;
 
     /**
+     * findRole() と同じだが、メンバー行をロックして読む（トランザクション内で呼ぶ）。
+     * 同時に退会しようとしている人を、引き継ぎの相手にしないために使う。
+     */
+    public function findRoleForUpdate(int $projectId, int $userId): ?ProjectRole;
+
+    /**
      * オーナーを先頭に、名前順で返す。
      *
      * @return list<ProjectMember>
@@ -24,7 +30,15 @@ interface ProjectMemberRepositoryInterface
     public function remove(int $projectId, int $userId): void;
 
     /**
-     * いずれかのプロジェクトのオーナーかどうか（退会できるかの判定に使う）。
+     * メンバーのロールを書き換える（オーナーの移譲に使う）。
      */
-    public function isOwnerOfAnyProject(int $userId): bool;
+    public function changeRole(int $projectId, int $userId, ProjectRole $role): void;
+
+    /**
+     * ユーザーが参加しているすべてのプロジェクトのメンバー行をロックし、ロールを返す
+     * （トランザクション内で呼ぶ。退会できるかの判定に使う）。
+     *
+     * @return list<ProjectRole>
+     */
+    public function findRolesByUserForUpdate(int $userId): array;
 }

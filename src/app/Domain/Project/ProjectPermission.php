@@ -16,6 +16,7 @@ use App\Domain\Shared\Exceptions\ForbiddenException;
  * | ボードの閲覧                 | ○        | ○                    | ×            |
  * | プロジェクトの編集・削除     | ○        | ×                    | ×            |
  * | メンバーの追加・削除         | ○        | ×                    | ×            |
+ * | オーナーの移譲               | ○        | ×                    | ×            |
  * | タスクの作成・編集・移動     | ○        | ○                    | ×            |
  * | タスクの削除                 | すべて   | 自分が作成したものだけ | ×          |
  */
@@ -27,7 +28,7 @@ final class ProjectPermission
     }
 
     /**
-     * プロジェクトの編集・削除と、メンバーの追加・削除。
+     * プロジェクトの編集・削除、メンバーの追加・削除、オーナーの移譲。
      */
     public static function canManageProject(?ProjectRole $role): bool
     {
