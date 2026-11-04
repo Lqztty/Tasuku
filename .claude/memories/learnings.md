@@ -47,8 +47,10 @@
 
 ### Laravel のバリデーションメッセージを日本語にするとき
 
+既定のメッセージは `lang/ja/validation.php`、`__()` の文は `lang/ja.json` に集めている（2026-11 に追加）。
+Request には項目名（`attributes()`）だけを書き、`messages()` で同じ文を書き直さない（文言が二重になるため）。
 `Rule::enum()` のメッセージは翻訳ファイル（`validation.enum`）からしか取らず、FormRequest の `messages()` が効かない。
-Request の中だけで日本語にしたいときは `Rule::in(array_column(Enum::cases(), 'value'))` を使う。
+`lang/ja` があるので今は日本語で出るが、個別の文にしたいときは `Rule::in(array_column(Enum::cases(), 'value'))` を使う。
 
 ---
 

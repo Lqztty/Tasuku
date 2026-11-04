@@ -31,17 +31,4 @@ class ProjectMemberRequest extends FormRequest
             'email' => 'メールアドレス',
         ];
     }
-
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'required' => ':attributeを入力してください。',
-            'string' => ':attributeは文字で入力してください。',
-            'email' => ':attributeの形式が正しくありません。',
-            'max' => ':attributeは:max文字以内で入力してください。',
-        ];
-    }
 }
