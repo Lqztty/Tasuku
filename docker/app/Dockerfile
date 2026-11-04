@@ -22,7 +22,18 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # 開発用の php.ini（本番用の設定は使わない）
+# php artisan serve は CLI の PHP で動くため、OPcache を CLI でも有効にする。
+# 一度コンパイルしたファイルを使い回し、変更の確認は 2 秒ごと（編集はほぼすぐ反映される）。
 RUN cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
-    && echo "memory_limit=512M" > "$PHP_INI_DIR/conf.d/tasuku.ini"
+    && { \
+        echo "memory_limit=512M"; \
+        echo "opcache.enable_cli=1"; \
+        echo "opcache.validate_timestamps=1"; \
+        echo "opcache.revalidate_freq=2"; \
+        echo "opcache.memory_consumption=256"; \
+        echo "opcache.max_accelerated_files=20000"; \
+        echo "realpath_cache_size=4096K"; \
+        echo "realpath_cache_ttl=600"; \
+    } > "$PHP_INI_DIR/conf.d/tasuku.ini"
 
 WORKDIR /var/www/html
