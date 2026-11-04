@@ -11,6 +11,11 @@ x-app-base: &app-base
   working_dir: /var/www/html
   volumes:
     - ./src:/var/www/html
+    # vendor と node_modules は Docker のボリューム（Linux の領域）に置く。
+    # Windows のフォルダ越しだと数千個のファイルを読むのが遅く、Laravel の起動に 17 秒以上かかったため
+    # （Linux の領域なら 0.3 秒）。コンテナの中の内容は Windows 側からは見えない。
+    - vendor:/var/www/html/vendor
+    - node_modules:/var/www/html/node_modules
 
 services:
   app:
@@ -50,3 +55,5 @@ services:
 
 volumes:
   db-data:
+  vendor:
+  node_modules:

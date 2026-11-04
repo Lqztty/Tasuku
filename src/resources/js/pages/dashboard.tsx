@@ -1,26 +1,72 @@
-import { Head } from '@inertiajs/react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Head, Link } from '@inertiajs/react';
+import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
+import {
+    DueDateLabel,
+    PriorityDot,
+} from '@/features/kanban/components/task-meta';
+import { TASK_STATUS_LABELS } from '@/features/kanban/lib/constants';
 import { dashboard } from '@/routes';
+import {
+    index as projectsIndex,
+    show as projectsShow,
+} from '@/routes/projects';
+import type { AssignedTask } from '@/types/models';
 
-export default function Dashboard() {
+type Props = {
+    tasks: AssignedTask[];
+};
+
+/**
+ * マイタスク: 自分が担当しているタスクを、プロジェクトをまたいで期限の近い順に並べる。
+ */
+export default function Dashboard({ tasks }: Props) {
     return (
         <>
-            <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+            <Head title="マイタスク" />
+            <div className="flex h-full flex-1 flex-col gap-4 p-4">
+                <Heading
+                    title="マイタスク"
+                    description="自分が担当しているタスク（期限の近い順）"
+                />
+
+                {tasks.length === 0 ? (
+                    <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-6 shadow-xs">
+                        <p className="text-sm text-muted-foreground">
+                            担当しているタスクはありません。
+                        </p>
+                        <Button variant="outline" asChild>
+                            <Link href={projectsIndex()}>
+                                プロジェクトを見る
+                            </Link>
+                        </Button>
                     </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+                ) : (
+                    <ul className="divide-y divide-border overflow-hidden rounded-xl border bg-card shadow-xs">
+                        {tasks.map((task) => (
+                            <li key={task.id}>
+                                <Link
+                                    href={projectsShow(task.project_id)}
+                                    className="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-accent"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-medium">
+                                            {task.title}
+                                        </p>
+                                        <p className="truncate text-xs text-muted-foreground">
+                                            {task.project_name} ・{' '}
+                                            {TASK_STATUS_LABELS[task.status]}
+                                        </p>
+                                    </div>
+                                    <PriorityDot priority={task.priority} />
+                                    <span className="w-16 text-right">
+                                        <DueDateLabel task={task} />
+                                    </span>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         </>
     );
@@ -29,7 +75,7 @@ export default function Dashboard() {
 Dashboard.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'マイタスク',
             href: dashboard(),
         },
     ],

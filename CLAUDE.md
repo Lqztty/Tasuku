@@ -35,6 +35,14 @@ docker compose exec node npm run types:check   # tsc
 
 ホストの 8000 番は別のコンテナが使っているため、app は 8080 番にしている（`APP_PORT` で変更可）。
 
+### vendor と node_modules はボリュームにある
+
+Windows のフォルダ越しだと Laravel の起動に 17 秒以上かかるため、`vendor/` と `node_modules/` は Docker のボリュームに置いている。
+
+- パッケージの追加・更新は必ずコンテナの中で行う（`docker compose exec app composer require ...` / `docker compose exec node npm install ...`）
+- Windows 側の `src/vendor/` と `src/node_modules/` は古いコピーで、コンテナは使っていない（エディタの補完用に残しているだけ）
+- 環境を作り直すときは、ボリュームが空なので `composer install` と `npm ci` をコンテナの中で実行する
+
 ## ディレクトリ構成
 
 ```
@@ -72,6 +80,7 @@ src/resources/js/components/  共通部品（ui/ は shadcn）
 | ドロップダウンメニュー | `components/ui/dropdown-menu` |
 | バッジ・チップ | `components/ui/badge` |
 | トースト | サーバー: `Inertia::flash('toast', ['type' => ..., 'message' => ...])`、クライアント: `toast()`（sonner） |
+| `router.delete` / `router.patch` などの失敗の表示 | `lib/visit-error-toast` の `visitErrorToast('削除')` をオプションに展開する（付けないと失敗しても何も表示されない） |
 | フォームのエラー表示 | `components/input-error` |
 | 見出し | `components/heading` |
 | クラス名の結合 | `lib/utils` の `cn()` |
