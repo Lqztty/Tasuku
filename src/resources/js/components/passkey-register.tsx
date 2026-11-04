@@ -1,6 +1,7 @@
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
+import { passkeyErrorMessage } from '@/lib/passkey-error-message';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,17 +30,18 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
             { pattern: /Windows/, name: 'Windows' },
         ].find(({ pattern }) => pattern.test(ua))?.name;
 
-        return [browser, os].filter(Boolean).join(' on ') || '';
+        return [browser, os].filter(Boolean).join(' / ') || '';
     });
 
     const [showForm, setShowForm] = useState(false);
-    const { register, isLoading, error, isSupported } = usePasskeyRegister({
-        onSuccess: () => {
-            setName('');
-            setShowForm(false);
-            onSuccess();
-        },
-    });
+    const { register, isLoading, errorInstance, isSupported } =
+        usePasskeyRegister({
+            onSuccess: () => {
+                setName('');
+                setShowForm(false);
+                onSuccess();
+            },
+        });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,7 +95,9 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
                 </p>
             </div>
 
-            {error && <InputError message={error} />}
+            {errorInstance && (
+                <InputError message={passkeyErrorMessage(errorInstance)} />
+            )}
 
             <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading || !name.trim()}>

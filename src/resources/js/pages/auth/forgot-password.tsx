@@ -55,7 +55,6 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 </Form>
 
                 <div className="space-x-1 text-center text-sm text-muted-foreground">
-                    <span>または</span>
                     <TextLink href={login()}>ログイン画面に戻る</TextLink>
                 </div>
             </div>

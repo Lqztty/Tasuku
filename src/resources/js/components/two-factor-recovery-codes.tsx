@@ -60,8 +60,7 @@ export default function TwoFactorRecoveryCodes({
                     リカバリーコード
                 </CardTitle>
                 <CardDescription>
-                    2段階認証の端末をなくしたときに、ログインするためのコードです。
-                    パスワードマネージャーなど安全な場所に保管してください。
+                    2段階認証の端末をなくしたときに、ログインするためのコードです。パスワードマネージャーなど安全な場所に保管してください。
                 </CardDescription>
             </CardHeader>
             <CardContent>

@@ -54,8 +54,7 @@ export default function ManageTwoFactor(props: Props) {
             {twoFactorEnabled ? (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        ログインのときに、スマートフォンの認証アプリ（TOTP
-                        対応）に表示される コードの入力を求められます。
+                        ログインのときに、スマートフォンの認証アプリ（TOTP対応）に表示されるコードの入力を求められます。
                     </p>
 
                     <div className="relative inline">
@@ -81,8 +80,7 @@ export default function ManageTwoFactor(props: Props) {
             ) : (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        2段階認証を有効にすると、ログインのときに、スマートフォンの認証アプリ
-                        （TOTP 対応）に表示されるコードの入力を求められます。
+                        2段階認証を有効にすると、ログインのときに、スマートフォンの認証アプリ（TOTP対応）に表示されるコードの入力を求められます。
                     </p>
 
                     <div>

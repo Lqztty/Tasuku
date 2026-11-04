@@ -70,8 +70,8 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                 <DialogContent>
                     <DialogTitle>パスキーの削除</DialogTitle>
                     <DialogDescription>
-                        パスキー「{passkey.name}」を削除しますか？
-                        削除すると、このパスキーではログインできなくなります。
+                        パスキー「{passkey.name}
+                        」を削除しますか？削除すると、このパスキーではログインできなくなります。
                     </DialogDescription>
                     <DialogFooter className="gap-2">
                         <DialogClose asChild>

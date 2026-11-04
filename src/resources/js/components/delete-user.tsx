@@ -44,8 +44,7 @@ export default function DeleteUser() {
                     <DialogContent>
                         <DialogTitle>アカウントを削除しますか？</DialogTitle>
                         <DialogDescription>
-                            アカウントを削除すると、関連するすべてのデータも完全に削除されます。
-                            続けるにはパスワードを入力してください。
+                            アカウントを削除すると、関連するすべてのデータも完全に削除されます。続けるにはパスワードを入力してください。
                         </DialogDescription>
 
                         <Form
