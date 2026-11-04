@@ -23,6 +23,24 @@
 
 `router.post()`でJSON APIを呼ぶと"All Inertia requests must receive a valid Inertia response"エラーになる。
 
+### Vite+ が外から見えなくなる（rebase 後）
+
+| 症状 | 原因 | 対処 |
+|------|------|------|
+| ブラウザから 5173 番に繋がらない。ログに「Network: use --host to expose」 | rebase などで作業ツリーが一時的に古いコミットになり、Docker 用の `server.host` が無い `vite.config.ts` で Vite が再起動した | `docker compose restart node` |
+
+### shadcn CLI で部品を足すとき（2026-11 時点）
+
+- `src/pnpm-workspace.yaml` があると CLI が pnpm を使おうとして失敗する。実行中だけ退避する:
+  `docker compose exec node sh -c 'mv pnpm-workspace.yaml /tmp/ && trap "mv /tmp/pnpm-workspace.yaml ." EXIT; npx shadcn@latest add <部品> --yes'`
+- 最新の CLI は無関係の npm パッケージ `cn` を依存に足し、`import { cn } from "cn"` で生成することがある。
+  依存の追加は取り消し、import を `@/lib/utils` に直す
+
+### Laravel のバリデーションメッセージを日本語にするとき
+
+`Rule::enum()` のメッセージは翻訳ファイル（`validation.enum`）からしか取らず、FormRequest の `messages()` が効かない。
+Request の中だけで日本語にしたいときは `Rule::in(array_column(Enum::cases(), 'value'))` を使う。
+
 ---
 
 ## デバッグ・診断パターン
