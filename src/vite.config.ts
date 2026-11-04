@@ -32,6 +32,8 @@ export default defineConfig({
     // - host: コンテナの外（ホストのブラウザ）から接続できるようにする
     // - hmr.host: ブラウザが接続しに行く先は、コンテナ名ではなく localhost
     // - usePolling: Windows のバインドマウントではファイル変更の通知がコンテナに届かないため
+    // - interval: 0.1 秒ごとの見回りは CPU を使い続けるので 1 秒にする（反映の遅れは最大 1 秒）
+    // - ignored: 見回る必要のないフォルダを外す（Wayfinder と再読み込みが見るのは app / routes / resources）
     server: {
         host: '0.0.0.0',
         port: 5173,
@@ -41,12 +43,20 @@ export default defineConfig({
         },
         watch: {
             usePolling: true,
+            interval: 1000,
+            binaryInterval: 3000,
             ignored: [
                 '**/.agents/**',
                 '**/.claude/**',
                 '**/.cursor/**',
                 '**/.junie/**',
                 '**/vendor/**',
+                '**/storage/**',
+                '**/bootstrap/cache/**',
+                '**/public/**',
+                '**/database/**',
+                '**/tests/**',
+                '**/.phpunit.cache/**',
             ],
         },
     },
