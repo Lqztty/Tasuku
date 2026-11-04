@@ -15,7 +15,8 @@ type TaskCardProps = {
 /**
  * ボードに並ぶタスクのカード。
  *
- * - マウス: クリックで編集、少し動かすとドラッグ（PointerSensor の distance）
+ * - マウス: クリックで編集、少し動かすとドラッグ（MouseSensor の distance）
+ * - タッチ: タップで編集、長押しでドラッグ（すぐ指を動かせばボードのスクロール）
  * - キーボード: Enter で編集、Space で持ち上げて矢印キーで移動し、Space で置く
  *
  * ドラッグ中もカード自体は動かさない（transform を使わない）。置き先は点線の枠
@@ -27,16 +28,21 @@ export function TaskCard({
     onEdit,
     isDragDisabled = false,
 }: TaskCardProps) {
-    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-        id: task.id,
-        data: { status: task.status },
-        disabled: isDragDisabled,
-    });
+    const { attributes, listeners, setNodeRef, isDragging, active } =
+        useSortable({
+            id: task.id,
+            data: { status: task.status },
+            disabled: isDragDisabled,
+        });
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            onEdit(task);
+
+            // キーボードでドラッグしている最中に編集を開くと、ドラッグが裏で続いたままになる
+            if (active === null) {
+                onEdit(task);
+            }
 
             return;
         }
@@ -53,7 +59,7 @@ export function TaskCard({
             onClick={() => onEdit(task)}
             aria-label={`${task.title}（Enter で編集、Space で移動）`}
             className={cn(
-                'cursor-grab touch-none rounded-lg border bg-card p-3 text-left shadow-xs transition-colors duration-150 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                'cursor-grab rounded-lg border bg-card p-3 text-left shadow-xs transition-colors duration-150 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
                 isDragging && 'border-dashed opacity-40',
                 isDragDisabled && 'cursor-progress',
             )}

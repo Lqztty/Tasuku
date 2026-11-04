@@ -3,7 +3,9 @@ import {
     DragOverlay,
     KeyboardSensor,
     MeasuringStrategy,
-    PointerSensor,
+    MouseSensor,
+    TouchSensor,
+    closestCenter,
     closestCorners,
     pointerWithin,
     useSensor,
@@ -52,8 +54,13 @@ type KanbanBoardProps = {
 const FALLBACK_CARD_HEIGHT = 72;
 
 /**
- * 重なりの判定。マウスの下にカードがあればそのカード、無ければ列（空いている所）。
- * キーボード操作ではマウスの位置が無いので、近い角で判定する。
+ * 重なりの判定。
+ *
+ * 1. マウスの下にカードがあれば、そのカード
+ * 2. マウスが列の中でもカードの外（カードの隙間・列の下の空き）なら、その列でいちばん近いカード。
+ *    列そのものを返すと、隙間を通るたびに置き先が「列の最後」へ飛んでしまうため。
+ *    カードが1枚も無い列のときだけ、列そのもの（＝最後）を返す
+ * 3. キーボード操作（マウスの位置が無い）は、近い角で判定する
  */
 const collisionDetection: CollisionDetection = (args) => {
     const within = pointerWithin(args);
@@ -63,7 +70,23 @@ const collisionDetection: CollisionDetection = (args) => {
         return [card];
     }
 
-    return within.length > 0 ? within : closestCorners(args);
+    const column = within[0];
+
+    if (!column) {
+        return closestCorners(args);
+    }
+
+    const status = args.droppableContainers.find((c) => c.id === column.id)
+        ?.data.current?.status;
+    const cardsInColumn = args.droppableContainers.filter(
+        (c) => typeof c.id === 'number' && c.data.current?.status === status,
+    );
+    const nearest = closestCenter({
+        ...args,
+        droppableContainers: cardsInColumn,
+    })[0];
+
+    return [nearest ?? column];
 };
 
 /**
@@ -91,8 +114,12 @@ export function KanbanBoard({
     const lastDragEndAtRef = useRef(0);
 
     const sensors = useSensors(
-        // 5px 動かすまではクリック扱いにする（カードを押して編集を開けるように）
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        // マウス: 5px 動かすまではクリック扱いにする（カードを押して編集を開けるように）
+        useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+        // タッチ: 長押し（0.25 秒）で持ち上げる。すぐ指を動かしたときはボードのスクロールにする
+        useSensor(TouchSensor, {
+            activationConstraint: { delay: 250, tolerance: 5 },
+        }),
         // Enter はカードの編集に使うので、持ち上げと置くのは Space だけにする
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -105,14 +132,18 @@ export function KanbanBoard({
     );
 
     const visibleColumns = groupByStatus(visibleTasks);
+    const visibleIds = new Set(visibleTasks.map((task) => task.id));
+    const isVisible = (task: Task) => visibleIds.has(task.id);
     const activeTask = tasks.find((task) => task.id === activeId);
 
     // 置き先の列にだけ、点線の枠を出す位置を渡す（今の場所と同じなら出さない）
     const preview: (DropPreview & { status: TaskStatus }) | null =
-        activeTask && dropTarget && !isSamePlace(activeTask, dropTarget)
+        activeTask && dropTarget && !isSamePlace(tasks, activeTask, dropTarget)
             ? {
                   status: dropTarget.status,
-                  beforeTaskId: taskAfterDrop(tasks, activeTask, dropTarget),
+                  beforeTaskId:
+                      taskAfterDrop(tasks, activeTask, dropTarget, isVisible)
+                          ?.id ?? null,
                   height: activeHeight,
               }
             : null;
@@ -169,7 +200,7 @@ export function KanbanBoard({
             isBelowCenter(event.active, event.over),
         );
 
-        if (!target || isSamePlace(active, target)) {
+        if (!target || isSamePlace(tasks, active, target)) {
             return;
         }
 
@@ -182,7 +213,7 @@ export function KanbanBoard({
             collisionDetection={collisionDetection}
             measuring={MEASURING}
             accessibility={{
-                announcements: createAnnouncements(tasks),
+                announcements: createAnnouncements(tasks, isVisible),
                 screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
             }}
             onDragStart={handleDragStart}

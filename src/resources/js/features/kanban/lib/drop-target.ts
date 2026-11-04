@@ -2,9 +2,16 @@ import type { Active, Over } from '@dnd-kit/core';
 import type { Task, TaskStatus } from '@/types/models';
 import { groupByStatus } from './move-locally';
 
+/** 中心の差がこれ以下なら「同じ高さ」とみなす（px） */
+const SAME_HEIGHT_TOLERANCE = 1;
+
 /**
- * ドラッグ中のカードの中心が、重ねているカードの中心より下にあるか。
- * 下なら「後ろに入る」、上なら「前に入る」と判断する。
+ * 重ねているカードの「後ろ」に入れるか（false なら「前」）。
+ *
+ * - マウス: ドラッグ中のカードの中心が、重ねているカードの中心より下なら後ろ
+ * - 中心が同じ高さのとき（キーボード操作では、重ねたカードにぴったり重なる）:
+ *   元の位置より下にあるカードに重ねたら後ろ、上なら前。
+ *   こうしないと、矢印キーの↓で隣のカードに重ねても「元の場所」になり、列の最後にも置けない
  */
 export function isBelowCenter(
     active: Pick<Active, 'rect'>,
@@ -16,9 +23,18 @@ export function isBelowCenter(
         return false;
     }
 
-    return (
-        dragged.top + dragged.height / 2 > over.rect.top + over.rect.height / 2
-    );
+    const diff =
+        dragged.top +
+        dragged.height / 2 -
+        (over.rect.top + over.rect.height / 2);
+
+    if (Math.abs(diff) > SAME_HEIGHT_TOLERANCE) {
+        return diff > 0;
+    }
+
+    const initial = active.rect.current.initial;
+
+    return initial !== null && over.rect.top > initial.top;
 }
 
 /**
@@ -33,10 +49,21 @@ export type DropTarget = {
 };
 
 /**
+ * 今の列の中で、上から何番目か（0 から）。
+ * position の値ではなく実際の並び順から求める（position が連番でなくても正しく判定するため）。
+ */
+function currentIndex(tasks: readonly Task[], active: Task): number {
+    return groupByStatus(tasks)[active.status].findIndex(
+        (task) => task.id === active.id,
+    );
+}
+
+/**
  * ドラッグ中のカードが重なっている所から、置き先を求める。
  *
- * - カードに重ねたら、そのカードの上半分なら前、下半分なら後ろ（isBelowCenter）
- * - 列の空いている所に重ねたら、その列の末尾
+ * - カードに重ねたら、前か後ろ（isBelowCenter）
+ * - 列の空いている所に重ねたら、その列の末尾（カードの無い列のときだけ起きる。
+ *   カードのある列では、当たり判定がいちばん近いカードを選ぶ）
  *
  * 位置は絞り込み後ではなく、全タスクの並びでの位置にする（サーバーの position と一致させるため）。
  */
@@ -51,7 +78,7 @@ export function resolveDrop(
         columns[status].filter((task) => task.id !== active.id);
 
     if (over.id === active.id) {
-        return { status: active.status, index: active.position };
+        return { status: active.status, index: currentIndex(tasks, active) };
     }
 
     const overTask = tasks.find((task) => task.id === over.id);
@@ -73,22 +100,33 @@ export function resolveDrop(
 }
 
 /** 今の場所と同じ（動かしても何も変わらない）か */
-export function isSamePlace(active: Task, target: DropTarget): boolean {
-    return target.status === active.status && target.index === active.position;
+export function isSamePlace(
+    tasks: readonly Task[],
+    active: Task,
+    target: DropTarget,
+): boolean {
+    return (
+        target.status === active.status &&
+        target.index === currentIndex(tasks, active)
+    );
 }
 
 /**
- * 置いた後に、すぐ下に来るタスクの ID（列の末尾なら null）。
- * 点線の枠をこのタスクの直前に出す。
+ * 置いた後に、すぐ下に来る「見えている」タスク（列の末尾なら null）。
+ * 点線の枠はこのタスクの直前に出し、読み上げもこのタスクを基準に言う。
+ *
+ * 絞り込みで隠れているタスクは飛ばす。飛ばさないと、すぐ下のタスクが隠れているときに
+ * 枠が列の末尾に出てしまい、実際に入る位置と食い違う。
  */
 export function taskAfterDrop(
     tasks: readonly Task[],
     active: Task,
     target: DropTarget,
-): number | null {
+    isVisible: (task: Task) => boolean = () => true,
+): Task | null {
     const others = groupByStatus(tasks)[target.status].filter(
         (task) => task.id !== active.id,
     );
 
-    return others[target.index]?.id ?? null;
+    return others.slice(target.index).find(isVisible) ?? null;
 }
