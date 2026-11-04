@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Application\User\EnsureUserCanBeDeletedUseCase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -46,9 +47,12 @@ class ProfileController extends Controller
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request, EnsureUserCanBeDeletedUseCase $ensureCanBeDeleted): RedirectResponse
     {
         $user = $request->user();
+
+        // オーナーのまま退会すると、オーナーのいないプロジェクトが残るため止める
+        $ensureCanBeDeleted->execute($user->id);
 
         Auth::logout();
 
