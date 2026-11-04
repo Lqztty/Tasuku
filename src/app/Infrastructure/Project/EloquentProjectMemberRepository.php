@@ -56,6 +56,14 @@ final class EloquentProjectMemberRepository implements ProjectMemberRepositoryIn
             ->delete();
     }
 
+    public function changeRole(int $projectId, int $userId, ProjectRole $role): void
+    {
+        KanbanProjectMember::query()
+            ->where('project_id', $projectId)
+            ->where('user_id', $userId)
+            ->update(['role' => $role->value]);
+    }
+
     public function isOwnerOfAnyProject(int $userId): bool
     {
         return KanbanProjectMember::query()

@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 「オーナーは必ず1人」を守るため、オーナーのままでは退会できない。
+ * 「オーナーは必ず1人」を守るため、オーナーのままでは退会できない（先に引き継ぐか、プロジェクトを削除する）。
  */
 class AccountDeletionTest extends TestCase
 {
@@ -51,5 +51,22 @@ class AccountDeletionTest extends TestCase
         // タスクは残り、担当者と作成者は外部キーの nullOnDelete で null になる
         $this->assertDatabaseHas('kanban_tasks', ['id' => $task->id, 'assignee_id' => null, 'created_by' => null]);
         $this->assertDatabaseMissing('kanban_project_user', ['user_id' => $member->id]);
+    }
+
+    public function test_オーナーを引き継いだ後なら退会できる(): void
+    {
+        $owner = User::factory()->create();
+        $member = User::factory()->create();
+        $project = KanbanProject::factory()->ownedBy($owner)->withMember($member)->create();
+
+        $this->actingAs($owner)
+            ->patch(route('projects.members.owner', [$project->id, $member->id]))
+            ->assertSessionHasNoErrors();
+
+        $response = $this->actingAs($owner)->delete(route('profile.destroy'), ['password' => 'password']);
+
+        $response->assertRedirect('/');
+        $this->assertNull($owner->fresh());
+        $this->assertDatabaseHas('kanban_project_user', ['project_id' => $project->id, 'user_id' => $member->id, 'role' => 'owner']);
     }
 }

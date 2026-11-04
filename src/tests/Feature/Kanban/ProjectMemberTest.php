@@ -136,4 +136,97 @@ class ProjectMemberTest extends TestCase
             ->delete(route('projects.members.destroy', [$this->project->id, $another->id]))
             ->assertForbidden();
     }
+
+    public function test_オーナーはメンバーにオーナーを引き継げる(): void
+    {
+        $this->actingAs($this->owner)
+            ->patch(route('projects.members.owner', [$this->project->id, $this->member->id]))
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast.type', 'success');
+
+        $this->assertDatabaseHas('kanban_project_user', [
+            'project_id' => $this->project->id,
+            'user_id' => $this->member->id,
+            'role' => ProjectRole::Owner->value,
+        ]);
+        $this->assertDatabaseHas('kanban_project_user', [
+            'project_id' => $this->project->id,
+            'user_id' => $this->owner->id,
+            'role' => ProjectRole::Member->value,
+        ]);
+        $this->assertSame(1, $this->project->members()->where('role', ProjectRole::Owner->value)->count());
+        // タスクの並びや担当者は変わらないので、ボードの版は進めない
+        $this->assertSame(0, $this->boardVersion());
+    }
+
+    public function test_引き継いだ後は新しいオーナーだけがメンバーを管理できる(): void
+    {
+        $newcomer = User::factory()->create();
+
+        $this->actingAs($this->owner)
+            ->patch(route('projects.members.owner', [$this->project->id, $this->member->id]));
+
+        $this->actingAs($this->owner)
+            ->post(route('projects.members.store', $this->project->id), ['email' => $newcomer->email])
+            ->assertForbidden();
+
+        $this->actingAs($this->member)
+            ->post(route('projects.members.store', $this->project->id), ['email' => $newcomer->email])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('kanban_project_user', ['project_id' => $this->project->id, 'user_id' => $newcomer->id]);
+    }
+
+    public function test_オーナー以外はオーナーを引き継げない(): void
+    {
+        $another = User::factory()->create();
+        $this->project->members()->create(['user_id' => $another->id, 'role' => ProjectRole::Member->value]);
+
+        $this->actingAs($this->member)
+            ->patch(route('projects.members.owner', [$this->project->id, $another->id]))
+            ->assertForbidden();
+
+        $this->actingAs($this->outsider)
+            ->patch(route('projects.members.owner', [$this->project->id, $this->member->id]))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('kanban_project_user', [
+            'project_id' => $this->project->id,
+            'user_id' => $this->owner->id,
+            'role' => ProjectRole::Owner->value,
+        ]);
+    }
+
+    public function test_メンバーでない人にはオーナーを引き継げない(): void
+    {
+        $this->actingAs($this->owner)
+            ->patch(route('projects.members.owner', [$this->project->id, $this->outsider->id]))
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('kanban_project_user', ['project_id' => $this->project->id, 'user_id' => $this->outsider->id]);
+    }
+
+    public function test_自分自身にはオーナーを引き継げない(): void
+    {
+        $this->actingAs($this->owner)
+            ->patch(route('projects.members.owner', [$this->project->id, $this->owner->id]))
+            ->assertSessionHasErrors(['member' => 'すでにオーナーです。']);
+
+        $this->assertDatabaseHas('kanban_project_user', [
+            'project_id' => $this->project->id,
+            'user_id' => $this->owner->id,
+            'role' => ProjectRole::Owner->value,
+        ]);
+    }
+
+    public function test_別のプロジェクトのメンバーを指定して引き継げない(): void
+    {
+        $outsidersProject = KanbanProject::factory()->ownedBy($this->outsider)->create();
+
+        $this->actingAs($this->outsider)
+            ->patch(route('projects.members.owner', [$outsidersProject->id, $this->member->id]))
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('kanban_project_user', ['project_id' => $outsidersProject->id, 'user_id' => $this->member->id]);
+    }
 }

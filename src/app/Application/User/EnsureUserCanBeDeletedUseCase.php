@@ -26,7 +26,7 @@ final class EnsureUserCanBeDeletedUseCase
             // 退会ダイアログがエラーを表示する欄が password だけなので、その欄に出す
             throw new InvalidInputException(
                 'password',
-                'オーナーになっているプロジェクトがあるため退会できません。先にプロジェクトを削除してください。',
+                'オーナーになっているプロジェクトがあるため退会できません。先にオーナーを他のメンバーに引き継ぐか、プロジェクトを削除してください。',
             );
         }
     }

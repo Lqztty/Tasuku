@@ -24,6 +24,11 @@ interface ProjectMemberRepositoryInterface
     public function remove(int $projectId, int $userId): void;
 
     /**
+     * メンバーのロールを書き換える（オーナーの移譲に使う）。
+     */
+    public function changeRole(int $projectId, int $userId, ProjectRole $role): void;
+
+    /**
      * いずれかのプロジェクトのオーナーかどうか（退会できるかの判定に使う）。
      */
     public function isOwnerOfAnyProject(int $userId): bool;
