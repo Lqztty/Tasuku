@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { visitErrorToast } from '@/lib/visit-error-toast';
 import type { Member, Task, TaskPriority, TaskStatus } from '@/types/models';
 import {
     TASK_PRIORITIES,
@@ -123,6 +124,7 @@ export function TaskFormDialog({
             onStart: () => setIsDeleting(true),
             onFinish: () => setIsDeleting(false),
             onSuccess: onClose,
+            ...visitErrorToast('タスクの削除'),
         });
     };
 

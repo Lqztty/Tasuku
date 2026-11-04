@@ -12,6 +12,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { visitErrorToast } from '@/lib/visit-error-toast';
 import type { Project } from '@/types/models';
 
 /**
@@ -28,6 +29,7 @@ export function ProjectDeleteDialog({
         router.delete(ProjectController.destroy.url(project.id), {
             onStart: () => setIsDeleting(true),
             onFinish: () => setIsDeleting(false),
+            ...visitErrorToast('プロジェクトの削除'),
         });
     };
 

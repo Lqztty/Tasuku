@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { visitErrorToast } from '@/lib/visit-error-toast';
 import type { Member } from '@/types/models';
 
 type MemberManageDialogProps = {
@@ -44,6 +45,7 @@ export function MemberManageDialog({
                 preserveState: true,
                 onStart: () => setRemovingUserId(member.user_id),
                 onFinish: () => setRemovingUserId(null),
+                ...visitErrorToast('メンバーの削除'),
             },
         );
     };
@@ -124,7 +126,6 @@ export function MemberManageDialog({
                                     </Button>
                                 </div>
                                 <InputError message={errors.email} />
-                                <InputError message={errors.member} />
                             </>
                         )}
                     </Form>

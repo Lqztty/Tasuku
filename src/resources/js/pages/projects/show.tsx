@@ -1,8 +1,6 @@
-// @reuse-checked: hooks/use-flash-toast はサーバーの flash を表示する仕組み。ここでは flash が返らない失敗（403/500/通信エラー）をクライアントで知らせるため sonner の toast() を直接使う。競合の flash は use-flash-toast がそのまま表示する
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import TaskController from '@/actions/App/Http/Controllers/TaskController';
 import { Button } from '@/components/ui/button';
 import { KanbanBoard } from '@/features/kanban/components/kanban-board';
@@ -18,6 +16,7 @@ import { moveLocally } from '@/features/kanban/lib/move-locally';
 import { MemberManageDialog } from '@/features/project/components/member-manage-dialog';
 import { ProjectDeleteDialog } from '@/features/project/components/project-delete-dialog';
 import { ProjectFormDialog } from '@/features/project/components/project-form-dialog';
+import { visitErrorToast } from '@/lib/visit-error-toast';
 import {
     index as projectsIndex,
     show as projectsShow,
@@ -104,25 +103,7 @@ export default function ProjectShow({
                     preserveState: true,
                     onStart: () => setIsMoving(true),
                     onFinish: () => setIsMoving(false),
-                    onError: () => {
-                        toast.error(
-                            '移動できませんでした。もう一度お試しください。',
-                        );
-                    },
-                    onHttpException: () => {
-                        toast.error(
-                            '移動できませんでした。画面を再読み込みしてください。',
-                        );
-
-                        return false; // Inertia の既定のエラー表示を出さない
-                    },
-                    onNetworkError: () => {
-                        toast.error(
-                            '通信できませんでした。接続を確認してください。',
-                        );
-
-                        return false;
-                    },
+                    ...visitErrorToast('移動'),
                 },
             );
     };

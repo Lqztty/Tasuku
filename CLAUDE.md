@@ -80,6 +80,7 @@ src/resources/js/components/  共通部品（ui/ は shadcn）
 | ドロップダウンメニュー | `components/ui/dropdown-menu` |
 | バッジ・チップ | `components/ui/badge` |
 | トースト | サーバー: `Inertia::flash('toast', ['type' => ..., 'message' => ...])`、クライアント: `toast()`（sonner） |
+| `router.delete` / `router.patch` などの失敗の表示 | `lib/visit-error-toast` の `visitErrorToast('削除')` をオプションに展開する（付けないと失敗しても何も表示されない） |
 | フォームのエラー表示 | `components/input-error` |
 | 見出し | `components/heading` |
 | クラス名の結合 | `lib/utils` の `cn()` |
