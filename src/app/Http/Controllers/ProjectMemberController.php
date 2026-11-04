@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Application\ProjectMember\AddProjectMemberUseCase;
+use App\Application\ProjectMember\LeaveProjectUseCase;
 use App\Application\ProjectMember\RemoveProjectMemberUseCase;
 use App\Application\ProjectMember\TransferProjectOwnershipUseCase;
 use App\Http\Requests\ProjectMemberRequest;
@@ -36,5 +37,17 @@ class ProjectMemberController extends Controller
         $this->toast('オーナーを引き継ぎました。');
 
         return back();
+    }
+
+    /**
+     * 自分からプロジェクトを抜ける。抜けたあとはボードを見られないので、一覧へ戻す。
+     */
+    public function leave(Request $request, int $project, LeaveProjectUseCase $useCase): RedirectResponse
+    {
+        $useCase->execute($this->userId($request), $project);
+
+        $this->toast('プロジェクトから抜けました。');
+
+        return to_route('projects.index');
     }
 }

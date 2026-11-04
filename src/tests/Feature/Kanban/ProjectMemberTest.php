@@ -229,4 +229,67 @@ class ProjectMemberTest extends TestCase
 
         $this->assertDatabaseMissing('kanban_project_user', ['project_id' => $outsidersProject->id, 'user_id' => $this->member->id]);
     }
+
+    public function test_メンバーは自分から抜けられ_担当していたタスクの担当者が外れボードの版が進む(): void
+    {
+        $assigned = $this->createTask(TaskStatus::Todo, ['assignee_id' => $this->member->id]);
+        $created = $this->createTask(TaskStatus::Todo, ['created_by' => $this->member->id]);
+        $ownersTask = $this->createTask(TaskStatus::Todo, ['assignee_id' => $this->owner->id]);
+
+        $this->actingAs($this->member)
+            ->delete(route('projects.leave', $this->project->id))
+            ->assertRedirect(route('projects.index'))
+            ->assertInertiaFlash('toast.type', 'success');
+
+        $this->assertDatabaseMissing('kanban_project_user', ['project_id' => $this->project->id, 'user_id' => $this->member->id]);
+        $this->assertDatabaseHas('kanban_tasks', ['id' => $assigned->id, 'assignee_id' => null]);
+        $this->assertDatabaseHas('kanban_tasks', ['id' => $ownersTask->id, 'assignee_id' => $this->owner->id]);
+        // 作成者は残す（抜けた人が作ったタスクはオーナーだけが削除できる）
+        $this->assertDatabaseHas('kanban_tasks', ['id' => $created->id, 'created_by' => $this->member->id]);
+        $this->assertSame(1, $this->boardVersion());
+
+        // 抜けたあとはボードを見られない
+        $this->actingAs($this->member)->get(route('projects.show', $this->project->id))->assertForbidden();
+    }
+
+    public function test_抜けても別のプロジェクトのメンバーのまま(): void
+    {
+        $other = KanbanProject::factory()->ownedBy($this->owner)->withMember($this->member)->create();
+        $otherTask = $this->createTask(TaskStatus::Todo, ['assignee_id' => $this->member->id], $other);
+
+        $this->actingAs($this->member)->delete(route('projects.leave', $this->project->id));
+
+        $this->assertDatabaseHas('kanban_project_user', ['project_id' => $other->id, 'user_id' => $this->member->id]);
+        $this->assertDatabaseHas('kanban_tasks', ['id' => $otherTask->id, 'assignee_id' => $this->member->id]);
+    }
+
+    public function test_オーナーは抜けられない(): void
+    {
+        $this->actingAs($this->owner)
+            ->delete(route('projects.leave', $this->project->id))
+            ->assertSessionHasErrors(['member' => 'オーナーはプロジェクトから抜けられません。先にほかのメンバーへオーナーを引き継いでください。']);
+
+        $this->assertDatabaseHas('kanban_project_user', [
+            'project_id' => $this->project->id,
+            'user_id' => $this->owner->id,
+            'role' => ProjectRole::Owner->value,
+        ]);
+        $this->assertSame(0, $this->boardVersion());
+    }
+
+    public function test_メンバーでない人は抜けられない(): void
+    {
+        $this->actingAs($this->outsider)
+            ->delete(route('projects.leave', $this->project->id))
+            ->assertForbidden();
+
+        $this->assertSame(0, $this->boardVersion());
+    }
+
+    public function test_存在しないプロジェクトからは抜けられない(): void
+    {
+        $this->actingAs($this->member)
+            ->delete(route('projects.leave', 999999))
+            ->assertNotFound();
+    }
 }

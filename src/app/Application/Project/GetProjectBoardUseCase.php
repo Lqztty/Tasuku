@@ -41,6 +41,7 @@ final class GetProjectBoardUseCase
             canManageProject: ProjectPermission::canManageProject($role),
             // 「作成者が null（退会済み）のタスクも削除できる」= すべて削除できる
             canDeleteAnyTask: ProjectPermission::canDeleteTask($role, $userId, null),
+            canLeaveProject: ProjectPermission::canLeaveProject($role),
         );
     }
 }

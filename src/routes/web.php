@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified'])->whereNumber(['project', 'user', 'task']
     Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
     Route::delete('projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::patch('projects/{project}/members/{user}/owner', [ProjectMemberController::class, 'transferOwnership'])->name('projects.members.owner');
+    Route::delete('projects/{project}/membership', [ProjectMemberController::class, 'leave'])->name('projects.leave');
 
     // タスク（どのプロジェクトのタスクかは UseCase がタスクから判断し、権限も確かめる）
     Route::post('projects/{project}/tasks', [TaskController::class, 'store'])->name('projects.tasks.store');

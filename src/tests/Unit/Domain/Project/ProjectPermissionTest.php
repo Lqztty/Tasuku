@@ -18,24 +18,25 @@ class ProjectPermissionTest extends TestCase
     private const int OTHER_USER_ID = 20;
 
     /**
-     * @return array<string, array{?ProjectRole, bool, bool, bool}>
+     * @return array<string, array{?ProjectRole, bool, bool, bool, bool}>
      */
     public static function roles(): array
     {
-        // [ロール, 閲覧, プロジェクト管理, タスク編集]
+        // [ロール, 閲覧, プロジェクト管理, タスク編集, 抜ける]
         return [
-            'オーナー' => [ProjectRole::Owner, true, true, true],
-            'メンバー' => [ProjectRole::Member, true, false, true],
-            'メンバー以外' => [null, false, false, false],
+            'オーナー' => [ProjectRole::Owner, true, true, true, false],
+            'メンバー' => [ProjectRole::Member, true, false, true, true],
+            'メンバー以外' => [null, false, false, false, false],
         ];
     }
 
     #[DataProvider('roles')]
-    public function test_ロールごとの権限(?ProjectRole $role, bool $view, bool $manage, bool $editTasks): void
+    public function test_ロールごとの権限(?ProjectRole $role, bool $view, bool $manage, bool $editTasks, bool $leave): void
     {
         $this->assertSame($view, ProjectPermission::canView($role));
         $this->assertSame($manage, ProjectPermission::canManageProject($role));
         $this->assertSame($editTasks, ProjectPermission::canEditTasks($role));
+        $this->assertSame($leave, ProjectPermission::canLeaveProject($role));
     }
 
     /**
