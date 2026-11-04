@@ -10,6 +10,11 @@ use App\Domain\Task\Entities\Task;
  */
 interface TaskRepositoryInterface
 {
+    /**
+     * 呼ぶたびに結果が変わりうる（ロック待ちの間に他の人が削除することがある）ため impure とする。
+     *
+     * @phpstan-impure
+     */
     public function find(int $id): ?Task;
 
     /**
