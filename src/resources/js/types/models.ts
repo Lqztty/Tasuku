@@ -60,4 +60,5 @@ export type AssignedTask = Task & {
 export type BoardPermissions = {
     manage_project: boolean;
     delete_any_task: boolean;
+    leave_project: boolean;
 };

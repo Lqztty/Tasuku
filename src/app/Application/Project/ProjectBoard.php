@@ -25,5 +25,6 @@ final readonly class ProjectBoard
         public array $tasks,
         public bool $canManageProject,
         public bool $canDeleteAnyTask,
+        public bool $canLeaveProject,
     ) {}
 }

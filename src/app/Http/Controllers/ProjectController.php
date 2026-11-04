@@ -53,6 +53,7 @@ class ProjectController extends Controller
             'permissions' => [
                 'manage_project' => $board->canManageProject,
                 'delete_any_task' => $board->canDeleteAnyTask,
+                'leave_project' => $board->canLeaveProject,
             ],
         ]);
     }

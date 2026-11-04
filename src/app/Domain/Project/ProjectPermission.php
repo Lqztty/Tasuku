@@ -17,8 +17,11 @@ use App\Domain\Shared\Exceptions\ForbiddenException;
  * | プロジェクトの編集・削除     | ○        | ×                    | ×            |
  * | メンバーの追加・削除         | ○        | ×                    | ×            |
  * | オーナーの移譲               | ○        | ×                    | ×            |
+ * | プロジェクトから抜ける       | ×（※）   | ○                    | ×            |
  * | タスクの作成・編集・移動     | ○        | ○                    | ×            |
  * | タスクの削除                 | すべて   | 自分が作成したものだけ | ×          |
+ *
+ * ※ オーナーが抜けるとオーナーのいないプロジェクトになるので、先にほかのメンバーへ引き継ぐ。
  */
 final class ProjectPermission
 {
@@ -33,6 +36,14 @@ final class ProjectPermission
     public static function canManageProject(?ProjectRole $role): bool
     {
         return $role === ProjectRole::Owner;
+    }
+
+    /**
+     * 自分からプロジェクトを抜ける。オーナーが抜けるとオーナーのいないプロジェクトになるので、メンバーだけ。
+     */
+    public static function canLeaveProject(?ProjectRole $role): bool
+    {
+        return $role === ProjectRole::Member;
     }
 
     /**

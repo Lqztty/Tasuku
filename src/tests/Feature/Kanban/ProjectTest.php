@@ -87,6 +87,7 @@ class ProjectTest extends TestCase
                 ->where('role', 'owner')
                 ->where('permissions.manage_project', true)
                 ->where('permissions.delete_any_task', true)
+                ->where('permissions.leave_project', false)
                 ->has('members', 2)
                 ->where('members.0.user_id', $this->owner->id) // オーナーが先頭
                 ->has('tasks', 0));
@@ -101,7 +102,8 @@ class ProjectTest extends TestCase
                 ->component('projects/show')
                 ->where('role', 'member')
                 ->where('permissions.manage_project', false)
-                ->where('permissions.delete_any_task', false));
+                ->where('permissions.delete_any_task', false)
+                ->where('permissions.leave_project', true));
     }
 
     public function test_メンバー以外はボードを見られない(): void
