@@ -34,6 +34,7 @@ class ProjectTest extends TestCase
             ->get(route('projects.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('projects/index')
                 ->has('projects', 1)
                 ->where('projects.0.id', $this->project->id)
                 ->where('projects.0.role', ProjectRole::Member->value)
@@ -42,7 +43,7 @@ class ProjectTest extends TestCase
 
         $this->actingAs($this->outsider)
             ->get(route('projects.index'))
-            ->assertInertia(fn (Assert $page) => $page->has('projects', 0));
+            ->assertInertia(fn (Assert $page) => $page->component('projects/index')->has('projects', 0));
     }
 
     public function test_作成した人がオーナーになりボードへ移動する(): void
@@ -80,6 +81,7 @@ class ProjectTest extends TestCase
             ->get(route('projects.show', $this->project->id))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('projects/show')
                 ->where('project.id', $this->project->id)
                 ->where('project.board_version', 0)
                 ->where('role', 'owner')
@@ -96,6 +98,7 @@ class ProjectTest extends TestCase
             ->get(route('projects.show', $this->project->id))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('projects/show')
                 ->where('role', 'member')
                 ->where('permissions.manage_project', false)
                 ->where('permissions.delete_any_task', false));

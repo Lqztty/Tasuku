@@ -36,6 +36,7 @@ class MyTaskTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
                 ->has('tasks', 3)
                 ->where('tasks.0.id', $sooner->id)
                 ->where('tasks.0.project_name', '別プロジェクト')
@@ -52,6 +53,6 @@ class MyTaskTest extends TestCase
         $this->actingAs($this->outsider)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('tasks', 0));
+            ->assertInertia(fn (Assert $page) => $page->component('dashboard')->has('tasks', 0));
     }
 }
