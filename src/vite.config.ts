@@ -28,8 +28,19 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    // Docker（node サービス）の中で動かすための設定。
+    // - host: コンテナの外（ホストのブラウザ）から接続できるようにする
+    // - hmr.host: ブラウザが接続しに行く先は、コンテナ名ではなく localhost
+    // - usePolling: Windows のバインドマウントではファイル変更の通知がコンテナに届かないため
     server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost',
+        },
         watch: {
+            usePolling: true,
             ignored: [
                 '**/.agents/**',
                 '**/.claude/**',
