@@ -1,0 +1,13 @@
+# OS / エディタ
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/
+
+# Claude Code の個人設定（共有しない）
+/.claude/settings.local.json
+
+# Laravel 本体の除外設定は src/.gitignore に置く。
+# .env は公開リポジトリに載せないよう、念のためここでも除外する。
+/src/.env
+/src/.env.backup
